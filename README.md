@@ -26,3 +26,39 @@ The source files provided include logs and song data. With respect to logs, even
 
 1. To run the data pipeline, run the `etl.py` script:
     ```python etl.py```
+
+
+## Run the ETL pipeline using AWS EMR Spark clusters 
+Leveraging the computing resources of AWS EMR, can improve the execution from the X hours required locally to the Y minutes achieved using the below prescribed configuration. Prior to executing the below steps, it is important to create an IAM user with the **`AmazonS3FullAccess`** role.
+
+1. Create an EMR cluster as follows:
+    ```
+    aws emr create-cluster --name udacity-spark-proj --use-default-roles\ 
+     --release-label emr-5.28.0 --instance-count 3 --applications Name=Spark\ 
+     --ec2-attributes KeyName=AWS_EC2_Personal,SubnetIds=subnet-0f756913b00e7b3ac\
+     --instance-type m5.xlarge --profile personal
+    ```
+    
+2. Enable port forwarding as follows:
+    ```
+    ssh -i <path to local pem file> -N -D 8157 hadoop@<Public IPv4 DNS>
+    ```
+
+3. Copy AWS certification file to EMR cluster as follows:
+    ```
+    scp -i <identity file> <path to local pem file> -N -D 8157 hadoop@<Public IPv4 DNS>:/home/hadoop
+    ```
+
+4. Connect to EMR cluster using the command:
+    ```
+    ssh -i <path to local identity file> hadoop@<Public IPv4 DNS>
+    ```
+
+5. Execute Spark job using the command below:
+    ```
+    /usr/bin/spark-submit --master yarn ./etl.py
+    ```
+    
+5. Terminate EMR cluster after job is completed
+    ```
+    terminate-clusters --cluster-ids <value> 
